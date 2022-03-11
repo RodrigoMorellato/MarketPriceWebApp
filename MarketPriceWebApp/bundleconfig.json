@@ -1,0 +1,20 @@
+[
+  {
+    "outputFileName": "wwwroot/css/site.min.css",
+    "inputFiles": [
+      "wwwroot/css/site.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/lib/datatables/datatables.net-bs5/dataTables.bootstrap5.min.css",
+    "inputFiles": [
+      "wwwroot/lib/datatables/datatables.net-bs5/dataTables.bootstrap5.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/datatables.net-buttons-bs5/buttons.bootstrap5.min.css",
+    "inputFiles": [
+      "wwwroot/datatables.net-buttons-bs5/buttons.bootstrap5.css"
+    ]
+  }
+]

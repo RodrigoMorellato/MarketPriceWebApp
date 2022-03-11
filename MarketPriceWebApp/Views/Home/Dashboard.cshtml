@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+@model MarketViewModel
+
+<form>
+    <div class="container shadow">
+        <div class="row">
+            <div class="col-sm-2">
+                <div class="input-group date" data-provide="datepicker">
+                    <input class="form-control" id="datepicker" name="date" data-date-format="dd/mm/yyyy" placeholder="mm/dd/yyyy" value="" bootstrap-datepicker="" data-date-end-date="0d">
+                    <div class="input-group-addon">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar-alt"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <button type="button" onclick="getPrices()" class="btn btn-info mb-2">Load Graph</button>
+            </div>
+        </div>
+
+        <div id="divDash">
+            <div class="text-center">
+                <p>
+                    <button class="btn btn-primary collapsible" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDashboard" aria-expanded="true" aria-controls="collapseDashboard">
+                        <h5>@ViewData["Title"]</h5>
+                    </button>
+                </p>
+                <div class="collapse show" id="collapseDashboard">
+                    <div class="card card-body">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div id="marketPrices" style="width:100%; height:400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+   <script type="text/javascript">
+        $(document).ready(function() {
+        });
+
+        const getPrices = async () => {
+            var date = $("#datepicker").val();
+            $.ajax({
+                url: '@Url.Action("GetPricesByDate", "Home")',
+                type: 'GET',
+                async: false,
+                data: { date: date },
+                dataType: 'json',
+                success: function(data) {
+                    if (data !== "") {
+                        $("#marketPrices").html("");
+                        initializeMarketGraph(data);
+                    } else {
+                        alert("Sorry, some error ocurred.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert(error);
+                }
+            });
+        };
+
+        function initializeMarketGraph(value) {
+            if (typeof (Morris) === 'undefined') {
+                return;
+            }
+            if ($('#marketPrices').length) {
+                Morris.Area({
+                    element: 'marketPrices',
+                    data: value,
+                    xkey: ['date'],
+                    ykeys: ['price'],
+                    labels: ['Value'],
+                    xLabelAngle: 35,
+                    hideHover: 'auto',
+                    resize: true,
+                    parseTime: false
+                });
+            }
+        };
+
+    </script>
+    }
+
+</form>

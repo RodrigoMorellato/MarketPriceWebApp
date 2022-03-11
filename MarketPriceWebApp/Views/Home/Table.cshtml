@@ -1,0 +1,198 @@
+﻿@{
+    ViewData["Title"] = "Market prices";
+}
+
+@model MarketViewModel
+
+<div class="container shadow">
+    <div class="row top_tiles">
+        <div class="animated flipInY col-md-3 col-sm-12">
+            <div class="tile-stats title-white alert-warning">
+                <div class="icon icon-white"><i class="fa-solid fa-angles-down"></i></div>
+                <div class="count">
+                    <span id="minimum"></span>
+                </div>
+                <p>Minimum value.</p>
+            </div>
+        </div>
+        <div class="animated flipInY col-md-3 col-sm-12">
+            <div class="tile-stats title-white alert-warning">
+                <div class="icon icon-white"><i class="fa-solid fa-angles-up"></i></div>
+                <div class="count">
+                    <span id="maximum"></span>
+                </div>
+                <p>Maximum value.</p>
+            </div>
+        </div>
+        <div class="animated flipInY col-md-3 col-sm-12">
+            <div class="tile-stats title-white alert-warning">
+                <div class="icon icon-white"><i class="fa-solid fa-gauge"></i></div>
+                <div class="count"><span id="average"></span></div>
+                <p>Serie average.</p>
+            </div>
+        </div>
+        <div class="animated flipInY col-md-3 col-sm-12">
+            <div class="tile-stats title-white alert-warning">
+                <div class="icon icon-white"><i class="fa fa-diamond"></i></div>
+                <div class="count"><span id="mostExpensive"></span></div>
+                <p>Most expensive hour window.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container shadow">
+    <div class="header">
+        <button class="btn btn-primary collapsible" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGrid" aria-expanded="true" aria-controls="collapseGrid">
+            <h5>@ViewData["Title"]</h5>
+        </button>
+    </div>
+    <div class="collapse show" id="collapseGrid">
+        <div class="card card-body" id="divGrid">
+            @await Html.PartialAsync("_GridMarketPrice", Model)
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"><span id="dateGraph"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="card card-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="marketPrices" style="width:100%; height:400px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-primary mb-2" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+    $(document).ready(function() {
+        getPrices();
+    });
+
+    var setMinimumMax = (dataPrices) => {
+        var highest = 0;
+        const lowest = dataPrices.reduce(function(a, b) {
+            highest = Math.max(parseFloat(a), parseFloat(b));
+            return Math.min(parseFloat(a), parseFloat(b));
+        });
+
+        $("#minimum").html(lowest.toFixed(2));
+        $("#maximum").html(highest.toFixed(2));
+    }
+
+    var setAverage = (dataPrices) => {
+        const avg = dataPrices.reduce((a, b) => parseFloat(a) + parseFloat(b)) / dataPrices.length;
+        $("#average").html(avg.toFixed(2));
+    }
+
+    var setMostExpensive = (dataPrices) => {
+        const findDuplicates = (arr) => arr.filter((item, index) => dataPrices.indexOf(item) !== index);
+        const duplArray = findDuplicates(dataPrices);
+        const mostExpensiveWindow = duplArray.reduce(function(a, b) {
+            return Math.max(parseFloat(a), parseFloat(b));
+        });
+
+        $("#mostExpensive").html(mostExpensiveWindow.toFixed(2));
+    }
+
+    var loadOverviewDataPrices = () => {
+        const oTable = $('#customerDatatable').DataTable();
+        const currentData = oTable.rows({ page: 'current' }).data().toArray();
+        const dataPrices = currentData.map((element) => parseFloat(element[2].replace(",", ".")).toFixed(2));
+        setMinimumMax(dataPrices);
+        setAverage(dataPrices);
+        setMostExpensive(dataPrices);
+    };
+
+    const getPrices = async () => {
+        $.ajax({
+            url: '@Url.Action("GetPricesDataForDisplay", "Home")',
+            type: 'GET',
+            async: false,
+            dataType: 'html',
+            success: function(data) {
+                if (data !== "") {
+                    $('#divGrid').html(data);
+                    loadGrid();
+                } else {
+                    alert("Sorry, some error ocurred.");
+                }
+            },
+            error: function(xhr, status, error) {
+                alert(error);
+            }
+        });
+    };
+
+    const initializeMarketGraph = (value) => {
+        if (typeof (Morris) === 'undefined') {
+            return;
+        }
+        $('#marketPrices').empty();
+        if ($('#marketPrices').length) {
+            Morris.Area({
+                element: 'marketPrices',
+                data: value,
+                xkey: ['date'],
+                ykeys: ['price'],
+                labels: ['Value'],
+                xLabelAngle: 35,
+                hideHover: 'auto',
+                resize: true,
+                parseTime: false
+            });
+        }
+    };
+    
+    const loadGraph = (date) => {
+        event.stopPropagation();
+        $("#staticBackdrop").modal("show");
+        $("#dateGraph").html(`Date chart of ${date}`);
+        
+        $("#marketPrices").html("");
+        $('#staticBackdrop').on('shown.bs.modal', function () { //listen for user to open modal
+            $(function () {
+                // Fire off an AJAX request to load the data graph
+                $.ajax({
+                        url: '@Url.Action("GetPricesByDate", "Home")',
+                        type: 'GET',
+                        async: false,
+                        dataType: 'json',
+                        data: { date: date }
+                    })
+                    .done(function (data) {
+                        initializeMarketGraph(data);
+                    })
+                    .fail(function () {
+                        alert("Sorry, some error ocurred.");
+                    });
+            });
+        });
+    };
+    
+    const loadGrid = () => {
+        initTableByIdGroup(loadOverviewDataPrices, "customerDatatable", "Data", 0, "Price", 2, 3, 0, null, "", "loadGraph", "0", "Load Graph");
+
+        //initTableById("customerDatatable");
+        var table = $('#customerDatatable').DataTable();
+        table.moment('dd/MM/yyyy');
+        table.page.len(25).draw();
+    };
+</script>
+}

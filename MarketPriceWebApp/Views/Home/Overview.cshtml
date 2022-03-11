@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Overview";
+}
+
+<div class="container shadow">
+
+    <h1>@ViewData["Title"]</h1>
+
+    <h5>Important</h5>
+    <p>This solution is a demonstration. Some files are downloaded from CDN and it might take a time.</p>
+
+    <h5>Main envolved tools</h5>
+    <ul>
+        <li>ASP.NET MVC</li>
+        <li>Datatables library</li>
+        <li>Morris Graph library</li>
+        <li>Bootstrap library</li>
+    </ul>
+
+    <h5>The table:</h5>
+    <ul>
+        <li>It is sorted by multiple columns by "Shift + click" on each header.</li>
+        <li>It is grouped by day and sub-grouped by value.</li>
+        <li>Each main group has a button to generate its own graph.</li>
+        <li>Groups and sub-groups are collapsed. To show each one you just need to click on it.</li>
+    </ul>
+
+    <h5>The graph:</h5>
+    <ul>
+        <li>It is rendered by day to show the line time of the prices during the day.</li>
+        <li>It is available through the button in each group line of the table.</li>
+        @*<li>It is available through the header link or button in each group line of the table.</li>*@
+    </ul>
+
+    <h5>How to run</h5>
+    <p>You can run the project in visual studio or follow the steps below:</p>
+    <ul>
+        <li>From the main path of the solution, you should go to the "bin\Release\net6.0\publish\"</li>
+        <li>Run "MarketPriceWebApp.exe"</li>
+        <li>Get the "http*" link shown and run it on the browser</li>
+    </ul>
+
+</div>
